@@ -234,15 +234,18 @@ app.get("/product", async (req, res) => {
     if (req.query.title) {
       filter.title = new RegExp("^" + req.query.title + ".*$", "i");
     }
+    filter.price = {};
     if (req.query.priceMin) {
-      filter.price = { $gt: req.query.priceMin };
+      // filter.price = { $gt: req.query.priceMin };
+      filter.price["$gt"] = req.query.priceMin;
     }
     if (req.query.priceMax) {
-      if (filter.price) {
-        filter.price["$lt"] = req.query.priceMax;
-      } else {
-        filter.price = { $lt: req.query.priceMax };
-      }
+      filter.price["$lt"] = req.query.priceMax;
+      // if (filter.price) {
+      //   filter.price["$lt"] = req.query.priceMax;
+      // } else {
+      //   filter.price = { $lt: req.query.priceMax };
+      // }
     }
     console.log("Filter: ", filter);
     const search = Product.find(filter)
@@ -264,6 +267,38 @@ app.get("/product", async (req, res) => {
   }
 });
 
+app.post("/product/update", async (req, res) => {
+  try {
+    const existingProduct = await Product.findById(req.query.id);
+    if (existingProduct !== null) {
+      if (existingProduct.category !== req.body.category) {
+        const existingCategory = await Category.findById(req.body.category);
+        if (existingCategory !== null) {
+          existingProduct.category = existingCategory;
+        } else {
+          return res.status(400).json({
+            error: {
+              message: "Updating product failed. Category id does not exist"
+            }
+          });
+        }
+      }
+      existingProduct.title = req.body.title;
+      existingProduct.description = req.body.description;
+      existingProduct.price = req.body.price;
+      await existingProduct.save();
+      return res.json({ message: "Product updated." });
+    } else {
+      return res.status(400).json({
+        error: {
+          message: "Product id does not exist"
+        }
+      });
+    }
+  } catch (error) {
+    res.status(400).json({ error: { message: error.message } });
+  }
+});
 //
 //
 //

@@ -156,3 +156,14 @@ const posts = await search;
 res.json(posts);
 
 ```
+
+#### Update
+
+- **POST** http://localhost:3000/product/update
+- Paramètres Query :
+  - id (identifiant de l'élément à modifier)
+- Paramètres Body :
+  - title (nouveau titre)
+  - description (nouvelle description)
+  - price (nouveau prix)
+  - category (nouvelle categorie attribuée)
