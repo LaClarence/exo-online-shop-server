@@ -5,7 +5,10 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-mongoose.connect("mongodb://localhost/online-shop");
+mongoose.connect(
+  "mongodb://localhost/online-shop",
+  { useNewUrlParser: true }
+);
 
 // MODEL DEFINITION
 const Department = mongoose.model("Department", {
@@ -234,18 +237,16 @@ app.get("/product", async (req, res) => {
     if (req.query.title) {
       filter.title = new RegExp("^" + req.query.title + ".*$", "i");
     }
-    filter.price = {};
+    // !!! filter.price = {}; Ne marche pas car price:{} plante le filtre
     if (req.query.priceMin) {
-      // filter.price = { $gt: req.query.priceMin };
+      filter.price = {};
       filter.price["$gt"] = req.query.priceMin;
     }
     if (req.query.priceMax) {
+      if (filter.price === undefined) {
+        filter.price = {};
+      }
       filter.price["$lt"] = req.query.priceMax;
-      // if (filter.price) {
-      //   filter.price["$lt"] = req.query.priceMax;
-      // } else {
-      //   filter.price = { $lt: req.query.priceMax };
-      // }
     }
     console.log("Filter: ", filter);
     const search = Product.find(filter)
@@ -315,3 +316,16 @@ app.all("*", function(req, res) {
 app.listen(3000, () => {
   console.log("<o>-]*>*]*>*- Online Shop Server started... -*<*[*<*[-<o>");
 });
+
+/* First ver
+filter.price = {};
+if (req.query.priceMin) {
+  filter.price = { $gt: req.query.priceMin };
+}
+if (req.query.priceMax) {
+   if (filter.price) {
+    filter.price["$lt"] = req.query.priceMax;
+   } else {
+     filter.price = { $lt: req.query.priceMax };
+}
+*/
